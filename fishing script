@@ -1,0 +1,160 @@
+// Initialize variables
+let playerInventory = [];
+let fishingLocation = ["by the sea", "by the lake", "by a river", "by the ocean"];
+let storyCards = []; // This will be dynamically populated
+const type = "fish"; // Use lowercase for consistency
+
+// Function to dynamically populate storyCards array
+function fetchStoryCards(callback) {
+    // Use the AI Dungeon API to fetch story cards of the specified type
+    getType(type)
+        .then(data => {
+            if (data && data.storycards) {
+                storyCards = data.storycards;
+            }
+            callback();
+        })
+        .catch(error => {
+            // Handle error (you can't use console.error directly in AI Dungeon)
+            callback();
+        });
+}
+
+// Fishing function
+function fish() {
+    // Determine the outcome of fishing attempt
+    let outcome = Math.random(); // Random number to determine fish type
+
+    // Initialize a variable to hold the caught fish
+    let caughtFish;
+
+    // Chance of catching exotic fish
+    if (outcome < 0.01) {
+        // Generate exotic fish description and name
+        let exoticFish = generateExoticFish();
+        playerInventory.push(exoticFish);
+
+        // Set the caught fish to the exotic fish
+        caughtFish = exoticFish;
+
+        return `You caught something unusual! You decide to name it ${exoticFish.name}.`;
+    } 
+    // Chance of catching regular fish
+    else if (outcome < 0.01) { // Adjusted probability for regular fish
+        let regularFish = generateRegularFish();
+        playerInventory.push(regularFish);
+        
+        // Set the caught fish to the regular fish
+        caughtFish = regularFish;
+
+        return `You caught a ${regularFish.name}.`;
+    }
+    // Chance of catching user-created story card fish
+    else if (outcome < 0.9) { // Adjusted probability for story card fish
+        let typeStoryCards = getUserStoryCards(type);
+        if (typeStoryCards.length > 0) {
+            let randomStoryCard = typeStoryCards[Math.floor(Math.random() * typeStoryCards.length)];
+            playerInventory.push(randomStoryCard);
+            
+            // Set the caught fish to the random story card
+            caughtFish = randomStoryCard;
+            
+            return `You caught a ${randomStoryCard.name}.`;
+        }
+    }
+    // Default case: didn't catch anything
+    let result = "You didn't catch anything."; 
+    return result;
+}
+
+// Function to generate exotic fish
+function generateExoticFish() {
+    // Function to generate random description
+    function generateRandomDescription() {
+        const adjectives = ["glittering", "sparkling", "iridescent", "luminous", "vibrant", "ethereal"];
+        const nouns = ["scales", "fins", "patterns", "colors", "markings", "textures"];
+    
+        let description = `${adjectives[Math.floor(Math.random() * adjectives.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]}`;
+    
+        return description;
+    }
+    
+    // Function to generate random name
+    function generateRandomName() {
+        const syllables = [
+            "ba", "be", "bi", "bo", "bu",
+            "da", "de", "di", "do", "du",
+            "fa", "fe", "fi", "fo", "fu",
+            "ga", "ge", "gi", "go", "gu",
+            "ha", "he", "hi", "ho", "hu",
+            "ja", "je", "ji", "jo", "ju",
+            "ka", "ke", "ki", "ko", "ku",
+            "la", "le", "li", "lo", "lu",
+            "ma", "me", "mi", "mo", "mu",
+            "na", "ne", "ni", "no", "nu",
+            "pa", "pe", "pi", "po", "pu",
+            "ra", "re", "ri", "ro", "ru",
+            "sa", "se", "si", "so", "su",
+            "ta", "te", "ti", "to", "tu",
+            "va", "ve", "vi", "vo", "vu",
+            "wa", "we", "wi", "wo", "wu",
+            "ya", "ye", "yi", "yo", "yu",
+            "za", "ze", "zi", "zo", "zu"
+        ];
+    
+        const nameLength = Math.floor(Math.random() * 4) + 2; // Random length between 2 and 5 syllables
+    
+        let name = ""; // Initialize an empty name string
+    
+        for (let i = 0; i < nameLength; i++) {
+            name += syllables[Math.floor(Math.random() * syllables.length)]; // Append a random syllable
+        }
+    
+        // Capitalize the first letter of the name
+        name = name.charAt(0).toUpperCase() + name.slice(1);
+    
+        return name;
+    }
+
+    // Generate random description and name
+    let description = generateRandomDescription();
+    let name = generateRandomName();
+
+    return { description: description, name: name };
+}
+
+// Function to retrieve user-created story cards based on category
+function getUserStoryCards(type) {
+    // Placeholder implementation to return story cards based on the specified category
+    // Replace this with your actual implementation to retrieve story cards from the database or storage
+    // Assuming you have a variable named "storyCards" containing all existing story cards
+    // Filter story cards based on the specified category
+    let typeStoryCards = storyCards.filter(card => card.type.toLowerCase() === type.toLowerCase());
+    
+    return typeStoryCards;
+}
+
+// Generate regular fish
+function generateRegularFish() {
+    // Define regular fish types
+    let regularFishTypes = ["Salmon", "Bass", "Trout", "Cod", "Catfish", "Perch", "Mackerel", "Pike", "Tuna", "Sardine", "Snapper", "Swordfish", "Red Snapper", "Grouper", "Flounder", "Anchovy", "Herring"]; // Change 'const' to 'let' to allow modification
+    
+    // Remove any conflicting names from the list
+    regularFishTypes = removeConflictingNames(regularFishTypes);
+
+    // Randomly select fish type
+    let fishType = regularFishTypes[Math.floor(Math.random() * regularFishTypes.length)];
+
+    return { name: fishType };
+}
+
+// Function to remove conflicting names
+function removeConflictingNames(names) {
+    // Check if any names are already in player inventory
+    let uniqueNames = names.filter(name => !playerInventory.some(fish => fish.name === name));
+    
+    // If all names are already in inventory, return an empty array to avoid infinite loop
+    if (uniqueNames.length === 0) return [];
+
+    return uniqueNames;
+}
